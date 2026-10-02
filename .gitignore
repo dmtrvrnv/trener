@@ -12,3 +12,5 @@ out/
 ДОСКА.md
 promo/qa*
 *.tsbuildinfo
+.cache/
+public/models/

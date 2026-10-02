@@ -18,6 +18,7 @@
   --accent-ink: #170803;
   --accent-soft: rgba(255, 91, 46, 0.14);
   --accent-line: rgba(255, 91, 46, 0.42);
+  --muscle: #ff2a2a;          /* только для подсветки работающих мышц на персонаже */
 
   --font-ui: 'Geist Variable', system-ui, sans-serif;
   --font-mono: 'Geist Mono Variable', ui-monospace, monospace;

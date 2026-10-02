@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, Check, Pause, Play, Plus, SpeakerHigh, SpeakerSlash, X } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, Check, Microphone, MicrophoneSlash, Pause, Play, Plus, SpeakerHigh, SpeakerSlash, X } from '@phosphor-icons/react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ExerciseAnimation } from '../anim/ExerciseAnimation';
@@ -7,7 +7,8 @@ import { exerciseById } from '../data/exercises';
 import { fmtTime, plural } from '../lib/labels';
 import { buildSteps, PHASE_RU, type Step, type WorkStep } from '../lib/session';
 import * as sfx from '../lib/sound';
-import { CREDIT, getState, recordSession, setSound, streak, todayWorkout, useAppState } from '../lib/store';
+import { CREDIT, getState, recordSession, setSound, setVoice, streak, todayWorkout, useAppState } from '../lib/store';
+import { onVoice, useVoice, type VoiceCommand } from '../lib/voice';
 import { Button, ProgressRing } from '../ui';
 import './workout.css';
 
@@ -42,14 +43,21 @@ export function Workout() {
     if (steps[n]?.type === 'work') completed.current.add(n);
   }, [steps]);
 
-  const goTo = useCallback((n: number) => {
+  const goTo = useCallback((n: number, silent = false) => {
     if (n >= steps.length) { finishAll(); return; }
     const next = steps[Math.max(0, n)];
     setI(Math.max(0, n));
     setExtra(0);
     setLeft(next.type === 'rest' ? next.seconds : next.seconds ?? 0);
-    if (next.type === 'work') sfx.go();
+    if (next.type === 'work' && !silent) sfx.go();
   }, [steps, finishAll]);
+
+  /** Подход закрыт: отдельный яркий сигнал конца и переход дальше. */
+  const finishStep = useCallback((n: number) => {
+    complete(n);
+    sfx.end();
+    goTo(n + 1, true);
+  }, [complete, goTo]);
 
   // часы: интервал только считает, переходы — в отдельном эффекте
   useEffect(() => {
@@ -67,9 +75,12 @@ export function Workout() {
       if (left === 0) { setMode('run'); goTo(0); } else sfx.tick();
       return;
     }
+    // два коротких сигнала на 2 и 1, третий на нуле: конец подхода (яркий) или старт после отдыха (длинный)
     if (mode === 'run' && timed) {
-      if (left === 0) { complete(i); goTo(i + 1); }
-      else if (left <= 3) sfx.tick();
+      if (left === 0) {
+        if (step?.type === 'work') finishStep(i);
+        else goTo(i + 1);
+      } else if (left <= 2) sfx.tick();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [left, paused]);
@@ -79,13 +90,39 @@ export function Workout() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { exit(); return; }
       if (mode !== 'run') return;
-      if (e.code === 'Space') { e.preventDefault(); if (step?.type === 'work' && !timed) { complete(i); goTo(i + 1); } else setPaused((p) => !p); }
+      if (e.code === 'Space') { e.preventDefault(); if (step?.type === 'work' && !timed) finishStep(i); else setPaused((p) => !p); }
       if (e.key === 'ArrowRight') goTo(i + 1);
       if (e.key === 'ArrowLeft') goTo(i - 1);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   });
+
+  // голос: те же действия, что кнопки
+  const voice = useVoice();
+  const [toast, setToast] = useState<{ text: string; at: number } | null>(null);
+  const onCmd = useRef<(c: VoiceCommand) => void>(() => {});
+  onCmd.current = (c) => {
+    const say = (text: string) => { sfx.heard(); setToast({ text, at: Date.now() }); };
+    if (mode === 'ready') {
+      if (c === 'pause') { setPaused(true); say('Пауза'); }
+      if (c === 'resume' || c === 'start') { setPaused(false); say('Продолжаем'); }
+      return;
+    }
+    if (mode !== 'run') return;
+    if (c === 'pause') { setPaused(true); say('Пауза'); }
+    else if (c === 'resume' || c === 'start') { setPaused(false); say('Продолжаем'); }
+    else if (c === 'done') { if (step?.type === 'work') { say('Готово'); setPaused(false); finishStep(i); } }
+    else if (c === 'next') { say('Дальше'); goTo(i + 1); }
+    else if (c === 'prev') { if (i > 0) { say('Назад'); goTo(i - 1); } }
+    else if (c === 'more') { if (step?.type === 'rest') { say('+15 с'); setExtra((x) => x + 15); setLeft((l) => l + 15); } }
+  };
+  useEffect(() => onVoice((c) => onCmd.current(c)), []);
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 1400);
+    return () => window.clearTimeout(t);
+  }, [toast]);
 
   const exit = () => {
     if (mode === 'run' && i > 0 && !window.confirm('Выйти из тренировки? Прогресс этой тренировки не сохранится.')) return;
@@ -110,10 +147,34 @@ export function Workout() {
         <Button variant="ghost" icon onClick={exit} aria-label="Закрыть"><X size={20} /></Button>
         <Segments steps={steps} i={mode === 'ready' ? -1 : i} />
         <span className="mono wo__clock">{fmtTime(elapsed)}</span>
+        <Button
+          variant="ghost" icon onClick={() => setVoice(!s.voice)}
+          aria-label="Голосовое управление"
+          title={voice.status === 'error' ? voice.error : s.voice ? 'Голос включён: «стоп», «продолжить», «готово», «дальше», «назад», «ещё»' : 'Включить голосовые команды'}
+          className={`wo__mic wo__mic--${s.voice ? voice.status : 'off'}`}
+        >
+          {s.voice ? <Microphone size={20} weight={voice.status === 'listening' ? 'fill' : 'regular'} /> : <MicrophoneSlash size={20} />}
+        </Button>
         <Button variant="ghost" icon onClick={() => setSound(!s.sound)} aria-label="Звук">
           {s.sound ? <SpeakerHigh size={20} /> : <SpeakerSlash size={20} />}
         </Button>
       </header>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            key={toast.at}
+            className="wo__toast"
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.04 }}
+            transition={{ type: 'spring', duration: 0.35, bounce: 0.2 }}
+          >
+            <Microphone size={22} weight="fill" /> {toast.text}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {paused && mode === 'run' && <div className="wo__paused">Пауза{s.voice ? <span>скажите «продолжить»</span> : null}</div>}
 
       <div className="wo__body">
         <div className={`wo__stage${isRest ? ' wo__stage--rest' : ''}`}>
@@ -190,7 +251,7 @@ export function Workout() {
             <div className="wo__controls">
               <Button icon size="lg" onClick={() => goTo(i - 1)} disabled={i === 0} aria-label="Назад"><ArrowLeft size={20} /></Button>
               {step?.type === 'work' && !timed ? (
-                <Button variant="primary" size="lg" className="wo__main" onClick={() => { complete(i); goTo(i + 1); }}>
+                <Button variant="primary" size="lg" className="wo__main" onClick={() => finishStep(i)}>
                   <Check size={18} weight="bold" /> Сделал
                 </Button>
               ) : (

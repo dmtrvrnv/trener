@@ -72,9 +72,12 @@ export function Today() {
                 <Button onClick={() => go('/play')}>Ещё раз</Button>
               </>
             ) : (
-              <Button variant="primary" size="lg" onClick={() => go('/play')}>
-                <Play size={18} weight="fill" /> Начать
-              </Button>
+              <>
+                <Button variant="primary" size="lg" onClick={() => go('/play')}>
+                  <Play size={18} weight="fill" /> Начать
+                </Button>
+                {s.voice && <span className="faint">или скажите «начать»</span>}
+              </>
             )}
           </div>
         </div>

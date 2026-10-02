@@ -2,6 +2,7 @@ import { ForkKnife, Lightning, PersonSimpleTaiChi, Pulse } from '@phosphor-icons
 import { AnimatePresence, motion } from 'motion/react';
 import { lazy, Suspense, useEffect, type ComponentType } from 'react';
 import { markVisit, useAppState, streak } from '../lib/store';
+import { onVoice, startVoice, stopVoice } from '../lib/voice';
 import { Today } from '../screens/Today';
 import { Exercises } from '../screens/Exercises';
 import { Progress } from '../screens/Progress';
@@ -34,6 +35,14 @@ export function App() {
     const t = window.setInterval(() => markVisit(), 60_000);
     return () => window.clearInterval(t);
   }, []);
+
+  // голосовое управление живёт, пока включено в настройках
+  useEffect(() => {
+    if (s.voice) void startVoice(); else stopVoice();
+  }, [s.voice]);
+  useEffect(() => onVoice((c) => {
+    if (c === 'start' && !window.location.hash.startsWith('#/play')) go('/play');
+  }), []);
 
   // виджет открывает «/today?start=1» — сразу запускаем тренировку
   useEffect(() => {

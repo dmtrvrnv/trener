@@ -1,6 +1,7 @@
 import { Player } from '@remotion/player';
 import { Chrono, CHRONO_FPS, CHRONO_H, CHRONO_W } from './Chrono';
 import { moves } from './moves';
+import { exerciseById } from '../data/exercises';
 
 /** Зацикленная анимация упражнения (Remotion Player как часы кадров). */
 export function ExerciseAnimation({ id, playing = true, ghosts, traces, className, style }: {
@@ -20,7 +21,7 @@ export function ExerciseAnimation({ id, playing = true, ghosts, traces, classNam
     <Player
       key={id + String(playing) + String(reduce)}
       component={Chrono}
-      inputProps={{ moveId: id, ghosts, traces }}
+      inputProps={{ moveId: id, ghosts, traces, muscles: exerciseById[id]?.muscles ?? [] }}
       durationInFrames={frames}
       compositionWidth={CHRONO_W}
       compositionHeight={CHRONO_H}

@@ -7,6 +7,16 @@ import { DevSheet } from './anim/DevSheet';
 const widgetLoader = Object.values(import.meta.glob('./widget/Widget.tsx'))[0];
 const Widget = widgetLoader ? lazy(widgetLoader as () => Promise<{ default: ComponentType }>) : null;
 
+{
+  // самопроверка распознавания без микрофона: window.__voiceTest(url)
+  (window as unknown as Record<string, unknown>).__voiceTest = async (url: string) => {
+    const { recognizeSamples } = await import('./lib/voice');
+    const buf = await (await fetch(url)).arrayBuffer();
+    const audio = await new AudioContext({ sampleRate: 16000 }).decodeAudioData(buf);
+    return recognizeSamples(audio.getChannelData(0), audio.sampleRate);
+  };
+}
+
 const isWidget = window.location.hash.startsWith('#/widget');
 if (isWidget) document.documentElement.dataset.surface = 'widget';
 // платформа из preload Electron: на macOS рельс уходит ниже кнопок окна

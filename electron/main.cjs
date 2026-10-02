@@ -1,9 +1,9 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell, screen } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, shell, screen, session, systemPreferences } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 let mainWindow, widgetWindow, tray, quitting = false;
 let preferences = { widget: true, alwaysOnTop: true };
-const loginOptions = { path: process.execPath, args: ['--hidden'] };
+const loginOptions = { path: process.execPath, args: ['--hidden'], openAsHidden: true };
 const devURL = !app.isPackaged && process.env.VITE_DEV_SERVER_URL;
 const preferencesFile = () => path.join(app.getPath('userData'), 'desktop.json');
 function savePreferences() { try { fs.writeFileSync(preferencesFile(), JSON.stringify(preferences)); } catch (error) { console.error('Desktop preferences:', error.message); } }
@@ -56,6 +56,22 @@ else {
   app.on('activate', () => openMain());
   app.whenReady().then(() => {
     try { preferences = { ...preferences, ...JSON.parse(fs.readFileSync(preferencesFile(), 'utf8')) }; } catch { /* first launch */ }
+    // Виджет должен жить на рабочем столе с момента входа в систему: в установленной сборке
+    // один раз включаем автозапуск (тихо, только виджет). Выключить можно в меню трея.
+    if (app.isPackaged && !preferences.autostartSet) {
+      app.setLoginItemSettings({ ...loginOptions, openAtLogin: true });
+      preferences.autostartSet = true;
+      savePreferences();
+    }
+    // Микрофон нужен только для голосовых команд; остальные разрешения не выдаём.
+    session.defaultSession.setPermissionCheckHandler((_wc, permission) => permission === 'media');
+    session.defaultSession.setPermissionRequestHandler(async (_wc, permission, callback, details) => {
+      if (permission !== 'media' || (details.mediaTypes || []).includes('video')) return callback(false);
+      if (process.platform === 'darwin' && systemPreferences.getMediaAccessStatus('microphone') !== 'granted') {
+        return callback(await systemPreferences.askForMediaAccess('microphone'));
+      }
+      callback(true);
+    });
     // A tiny monochrome RGBA tray mark; no external assets or platform codecs.
     const pixels = Buffer.alloc(16 * 16 * 4);
     for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const i = (y * 16 + x) * 4; const on = (y >= 3 && y <= 5 && x >= 2 && x <= 13) || (x >= 6 && x <= 9 && y >= 5 && y <= 13); pixels[i] = pixels[i + 1] = pixels[i + 2] = 236; pixels[i + 3] = on ? 255 : 0; }

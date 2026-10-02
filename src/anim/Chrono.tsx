@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactElement } from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'remotion';
 import { moves } from './moves';
 import { bounds, L, place, type JointName, type Joints, type Move, type Vec } from './rig';
@@ -13,6 +13,7 @@ const C = {
   line: 'var(--line, #2a2e2a)',
   line2: 'var(--line-2, #363b36)',
   accent: 'var(--accent, #ff5b2e)',
+  muscle: 'var(--muscle, #ff2a2a)',
   bg: 'var(--bg, #0d0e0d)',
   surface: 'var(--surface-2, #1c1f1c)',
 };
@@ -88,7 +89,57 @@ function Prop({ m, tx, s }: { m: Move; tx: (p: Vec) => Vec; s: number }) {
   return null;
 }
 
-export function Chrono({ moveId, ghosts = 6, traces = true }: { moveId: string; ghosts?: number; traces?: boolean }) {
+type Layer = 'far' | 'trunk' | 'nearLeg' | 'nearArm';
+
+/** Кусок кости 18–82%: «брюшко» мышцы. */
+function belly(j: Joints, a: JointName, b: JointName, tx: (p: Vec) => Vec) {
+  const p = tx(j[a]), q = tx(j[b]);
+  const at = (t: number) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
+  const u = at(0.18), v = at(0.82);
+  return `M${u[0].toFixed(1)} ${u[1].toFixed(1)}L${v[0].toFixed(1)} ${v[1].toFixed(1)}`;
+}
+
+/** Подсветка работающих мышц: первая в списке — главная (ярче), остальные слабее. */
+function Muscles({ j, tx, sw, list, layer, view }: { j: Joints; tx: (p: Vec) => Vec; sw: number; list: string[]; layer: Layer; view: 'side' | 'front' }) {
+  if (!list.length) return null;
+  const out: ReactElement[] = [];
+  const op = (name: string) => (list[0] === name ? 1 : 0.62) * (layer === 'far' ? 0.6 : 1);
+  const seg = (name: string, a: JointName, b: JointName, w: number) =>
+    out.push(<path key={name + a + b} d={belly(j, a, b, tx)} stroke={C.muscle} strokeWidth={w} opacity={op(name)} strokeLinecap="round" />);
+  const blob = (name: string, p: Vec, r: number) =>
+    out.push(<circle key={name + p[0].toFixed(0) + p[1].toFixed(0)} cx={p[0]} cy={p[1]} r={r} fill={C.muscle} opacity={op(name)} />);
+  const side = layer === 'far' ? 'F' : 'N';
+  const has = (m: string) => list.includes(m);
+  const limb = (n: string) => n as JointName;
+  if (layer === 'far' || layer === 'nearLeg') {
+    if (has('quads')) seg('quads', limb('hip' + side), limb('knee' + side), sw * 0.95);
+    if (has('hamstrings') && !has('quads')) seg('hamstrings', limb('hip' + side), limb('knee' + side), sw * 0.95);
+    if (has('calves')) seg('calves', limb('knee' + side), limb('ankle' + side), sw * 0.85);
+  }
+  if (layer === 'far' || layer === 'nearArm') {
+    if (has('triceps') || has('biceps')) seg(has('triceps') ? 'triceps' : 'biceps', limb('shoulder' + side), limb('elbow' + side), sw * 0.8);
+    if (has('shoulders')) blob('shoulders', tx(j[limb('shoulder' + side)]), sw * 0.62);
+  }
+  if (layer === 'trunk') {
+    if (has('core')) seg('core', 'pelvis', 'mid', sw * 1.35);
+    if (has('back')) { seg('back', 'pelvis', 'mid', sw * 1.35); seg('back', 'mid', 'neck', sw * 1.35); }
+    if (has('chest')) seg('chest', 'mid', 'neck', sw * 1.35);
+  }
+  // ягодицы рисуем последними в слое ближней ноги, иначе бедро их закрывает
+  if (layer === 'nearLeg' && has('glutes')) {
+    if (view === 'front') { blob('glutes', tx(j.hipN), sw * 0.85); blob('glutes', tx(j.hipF), sw * 0.85); }
+    else {
+      // позади таза: сдвиг перпендикулярно позвоночнику назад
+      const p = tx(j.pelvis), q = tx(j.mid);
+      const len = Math.hypot(q[0] - p[0], q[1] - p[1]) || 1;
+      const back: Vec = [p[0] + ((q[1] - p[1]) / len) * sw * 0.6, p[1] - ((q[0] - p[0]) / len) * sw * 0.6];
+      blob('glutes', back, sw * 0.95);
+    }
+  }
+  return <>{out}</>;
+}
+
+export function Chrono({ moveId, ghosts = 6, traces = true, muscles = [] }: { moveId: string; ghosts?: number; traces?: boolean; muscles?: string[] }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const m = moves[moveId];
@@ -147,12 +198,17 @@ export function Chrono({ moveId, ghosts = 6, traces = true }: { moveId: string; 
 
         {/* сам персонаж */}
         <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+          {/* мышцы рисуются поверх своей кости, слоями: дальняя сторона, корпус, ближняя сторона */}
           <path d={path(now.joints, [...FAR_ARM, ...FAR_LEG], tx)} stroke={C.far} strokeWidth={sw * 1.15} />
+          <Muscles j={now.joints} tx={tx} sw={sw} list={muscles} layer="far" view={m.view} />
           {m.view === 'front' && <path d={frontPelvis(now.joints, tx)} stroke={C.text} strokeWidth={sw * 1.4} />}
           <path d={path(now.joints, SPINE, tx)} stroke={C.text} strokeWidth={sw * 1.9} />
           <path d={path(now.joints, [['neck', 'head']], tx)} stroke={C.text} strokeWidth={sw * 0.9} />
+          <Muscles j={now.joints} tx={tx} sw={sw} list={muscles} layer="trunk" view={m.view} />
           <path d={path(now.joints, NEAR_LEG, tx)} stroke={C.text} strokeWidth={sw * 1.3} />
+          <Muscles j={now.joints} tx={tx} sw={sw} list={muscles} layer="nearLeg" view={m.view} />
           <path d={path(now.joints, NEAR_ARM, tx)} stroke={C.text} strokeWidth={sw * 1.05} />
+          <Muscles j={now.joints} tx={tx} sw={sw} list={muscles} layer="nearArm" view={m.view} />
           <circle cx={head[0]} cy={head[1]} r={L.headR * cam.s} fill={C.text} />
         </g>
         {/* суставы с траекторией — точкой акцента */}

@@ -21,6 +21,7 @@ export interface AppState {
   visits: string[];      // дни, когда приложение открывали (отсортированы)
   sessions: Record<string, Session>; // по дате, последняя тренировка за день
   sound: boolean;
+  voice: boolean;        // голосовые команды
 }
 
 const KEY = 'trener.state.v1';
@@ -41,7 +42,7 @@ const dayDiff = (a: Date, b: Date) => Math.round((parseKey(dateKey(b)).getTime()
 export const weekday = (d: Date) => (d.getDay() + 6) % 7;
 
 function fresh(): AppState {
-  return { version: 1, startDate: dateKey(), level: 'normal', visits: [], sessions: {}, sound: true };
+  return { version: 1, startDate: dateKey(), level: 'normal', visits: [], sessions: {}, sound: true, voice: false };
 }
 
 export function loadState(): AppState {
@@ -101,6 +102,7 @@ export function recordSession(s: Omit<Session, 'date' | 'finishedAt'>, d = new D
 
 export const setLevel = (level: Level) => update((s) => ({ ...s, level }));
 export const setSound = (sound: boolean) => update((s) => ({ ...s, sound }));
+export const setVoice = (voice: boolean) => update((s) => ({ ...s, voice }));
 export const restartProgram = () => update((s) => ({ ...s, startDate: dateKey() }));
 
 // ——— программа ———

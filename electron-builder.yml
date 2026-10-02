@@ -25,6 +25,10 @@ mac:
     - target: dmg
       arch: [x64, arm64]
   hardenedRuntime: true
+  entitlements: electron/entitlements.mac.plist
+  entitlementsInherit: electron/entitlements.mac.plist
+  extendInfo:
+    NSMicrophoneUsageDescription: Trener слушает голосовые команды во время тренировки («стоп», «продолжить», «дальше»). Распознавание работает на компьютере, звук никуда не отправляется.
 dmg:
   title: Trener
 artifactName: '${productName}-${version}-${os}-${arch}.${ext}'

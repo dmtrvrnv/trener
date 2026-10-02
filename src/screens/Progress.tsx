@@ -1,10 +1,11 @@
-import { ArrowCounterClockwise, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, Microphone, MicrophoneSlash, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react';
+import { useVoice, VOICE_HELP } from '../lib/voice';
 import { useMemo } from 'react';
 import { exerciseById } from '../data/exercises';
 import { program } from '../data/program';
 import { fmtTime, plural } from '../lib/labels';
 import {
-  addDays, bestStreak, dateKey, markFor, parseKey, restartProgram, setSound, streak, totals, useAppState, visitStreak, weekday, workoutFor,
+  addDays, bestStreak, dateKey, markFor, parseKey, restartProgram, setSound, setVoice, streak, totals, useAppState, visitStreak, weekday, workoutFor,
 } from '../lib/store';
 import { Button, Panel, Stat } from '../ui';
 import './progress.css';
@@ -17,6 +18,7 @@ export function Progress() {
   const s = useAppState();
   const t = totals(s);
   const st = streak(s);
+  const voice = useVoice();
 
   const grid = useMemo(() => {
     const now = new Date();
@@ -118,6 +120,20 @@ export function Progress() {
                 {s.sound ? <><SpeakerHigh size={14} /> Включены</> : <><SpeakerSlash size={14} /> Выключены</>}
               </Button>
             </div>
+            <div className="settings__row">
+              <span>
+                Голосовые команды
+                <span className="faint settings__sub">{s.voice && voice.status === 'error' ? voice.error : 'работают без интернета, микрофон слушается только пока включено'}</span>
+              </span>
+              <Button size="sm" onClick={() => setVoice(!s.voice)}>
+                {s.voice ? <><Microphone size={14} weight="fill" /> {voice.status === 'loading' ? 'Загрузка…' : 'Включены'}</> : <><MicrophoneSlash size={14} /> Выключены</>}
+              </Button>
+            </div>
+            {s.voice && (
+              <ul className="voice-help">
+                {VOICE_HELP.map((h) => <li key={h.cmd}><span>«{h.say}»</span><span className="faint">{h.what}</span></li>)}
+              </ul>
+            )}
             <div className="settings__row">
               <span>Программа с первой недели <span className="faint">(сейчас с {DAY.format(parseKey(s.startDate))})</span></span>
               <Button size="sm" onClick={() => { if (window.confirm('Начать программу заново с этой недели? Серия и история останутся.')) restartProgram(); }}>

@@ -1,4 +1,4 @@
-import { fk, leveled, reach, swapSides, type JointName, type Key, type Move, type Pose, type Vec } from './rig';
+import { fk, L, leveled, reach, swapSides, type JointName, type Key, type Move, type Pose, type Vec } from './rig';
 
 // Углы: 0 вниз, 90 вперёд (персонаж смотрит вправо), 180 вверх, 270 назад.
 // Во фронтальном виде N — правая для зрителя сторона, положительные углы уводят её наружу.
@@ -149,18 +149,42 @@ const def = (m: Move) => list.push(m);
 
 // ═════════ Верх ═════════
 
-{ // Отжимания
-  const top: Pose = { s1: 115, s2: 115, head: 118, aN: [0, 0], aF: [2, 2], lN: [-65, -65, -10], lF: [-65, -65, -10] };
-  const bottom: Pose = { s1: 96, s2: 96, head: 100, aN: [241, 2], aF: [243, 4], lN: [-84, -84, -10], lF: [-84, -84, -10] };
-  def({ id: 'pushup', view: 'side', period: 2.6, contacts: ['wristN', 'toeN'], anchor: 'wristN', level: ['wristN', 'toeN'], traces: ['neck', 'elbowN'], prop: 'mat',
-    keys: there(top, bottom) });
+/**
+ * Отжимания как шарнир: опора (носки или колени) прибита к полу, прямой корпус поворачивается
+ * вокруг неё на угол elev над полом, ладони стоят на месте, локти сгибаются по IK назад к ногам.
+ */
+function hingePush(pivot: 'toeN' | 'kneeN', legs: (body: number) => Pick<Pose, 'lN' | 'lF'>) {
+  const build = (body: number): Pose => ({ s1: body, s2: body, head: body + 4, aN: [0, 0], aF: [0, 0], ...legs(body) });
+  const rel = (body: number) => { const j = fk(build(body), 'side'); return { j, dx: j.shoulderN[0] - j[pivot][0], dy: j[pivot][1] - j.shoulderN[1] }; };
+  // угол корпуса, при котором плечи на высоте h над опорой
+  const solve = (h: number) => {
+    let lo = 90, hi = 150;
+    for (let n = 0; n < 40; n++) { const m = (lo + hi) / 2; if (rel(m).dy < h) lo = m; else hi = m; }
+    return (lo + hi) / 2;
+  };
+  const topBody = solve(L.upper + L.fore - 1);   // руки почти прямые и вертикальные
+  const handX = rel(topBody).dx;                  // ладони под плечами в верхней точке
+  const bottomBody = solve(13);                   // грудь у пола
+  return (u: number): Pose => {
+    let p = build(topBody + (bottomBody - topBody) * u);
+    const { j } = rel(p.s1);
+    const hand: Vec = [j[pivot][0] + handX, j[pivot][1]];
+    p = reach(p, 'side', 'aN', hand, -1);
+    p = reach(p, 'side', 'aF', [hand[0] + 1, hand[1]], -1);
+    return p;
+  };
 }
 
-{ // Отжимания с колен
-  const top: Pose = { s1: 118, s2: 118, head: 120, aN: [0, 0], aF: [2, 2], lN: [-62, -120, -120], lF: [-62, -118, -118] };
-  const bottom: Pose = { s1: 100, s2: 100, head: 103, aN: [241, 2], aF: [243, 4], lN: [-80, -125, -125], lF: [-80, -123, -123] };
-  def({ id: 'knee-pushup', view: 'side', period: 2.6, contacts: ['wristN', 'kneeN'], anchor: 'wristN', level: ['wristN', 'kneeN'], traces: ['neck', 'elbowN'], prop: 'mat',
-    keys: there(top, bottom) });
+{ // Отжимания: опора на носки
+  const f = hingePush('toeN', (b) => ({ lN: [b - 180, b - 180, b - 130], lF: [b - 180, b - 180, b - 130] }));
+  def({ id: 'pushup', view: 'side', period: 2.6, contacts: ['wristN', 'toeN'], anchor: 'wristN', traces: ['neck', 'elbowN'], prop: 'mat',
+    keys: thereFn(f) });
+}
+
+{ // Отжимания с колен: колени на месте, голени лежат приподнятыми, двигается только корпус
+  const f = hingePush('kneeN', (b) => ({ lN: [b - 180, -112, -112], lF: [b - 180, -110, -110] }));
+  def({ id: 'knee-pushup', view: 'side', period: 2.6, contacts: ['wristN', 'kneeN'], anchor: 'wristN', traces: ['neck', 'elbowN'], prop: 'mat',
+    keys: thereFn(f) });
 }
 
 { // Отжимания от стены: ладони на стене на высоте груди

@@ -1,15 +1,17 @@
 {
   "name": "trener",
   "productName": "Trener",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Домашние тренировки на каждый день: анимированные упражнения, трекер серии, калькулятор калорий и виджет для рабочего стола",
   "private": true,
   "main": "electron/main.cjs",
   "type": "module",
   "license": "MIT",
   "scripts": {
+    "predev": "node scripts/fetch-voice-model.mjs",
     "dev": "concurrently -k -n vite,electron \"vite\" \"wait-on tcp:127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
     "web": "vite",
+    "prebuild": "node scripts/fetch-voice-model.mjs",
     "build": "tsc -b && vite build",
     "start": "electron .",
     "dist": "npm run build && electron-builder",
@@ -25,7 +27,8 @@
     "motion": "^13.5.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "remotion": "^4.0.532"
+    "remotion": "^4.0.532",
+    "vosk-browser": "^0.0.8"
   },
   "devDependencies": {
     "@remotion/cli": "^4.0.532",
