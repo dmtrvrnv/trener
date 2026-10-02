@@ -1,0 +1,35 @@
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+@import '@fontsource-variable/unbounded';
+@import '@fontsource-variable/doto';
+
+:root {
+  --bg: #0d0e0d;
+  --surface: #151715;
+  --surface-2: #1c1f1c;
+  --surface-3: #242824;
+  --line: #2a2e2a;
+  --line-2: #363b36;
+  --text: #eceee8;
+  --text-2: #9ca197;
+  --text-3: #62675f;
+  --accent: #ff5b2e;
+  --accent-2: #ff7a55;
+  --accent-ink: #170803;
+  --accent-soft: rgba(255, 91, 46, 0.14);
+  --accent-line: rgba(255, 91, 46, 0.42);
+
+  --font-ui: 'Geist Variable', system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+  --font-display: 'Unbounded Variable', 'Geist Variable', sans-serif;
+  --font-dot: 'Doto Variable', 'Geist Mono Variable', monospace;
+
+  --r-panel: 12px;
+  --r-field: 8px;
+  --r-pill: 999px;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-io: cubic-bezier(0.77, 0, 0.175, 1);
+  --t-fast: 120ms;
+  --t-ui: 220ms;
+}

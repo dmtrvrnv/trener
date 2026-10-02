@@ -1,0 +1,43 @@
+{
+  "name": "trener",
+  "productName": "Trener",
+  "version": "0.1.0",
+  "description": "Домашние тренировки на каждый день: анимированные упражнения, трекер серии, калькулятор калорий и виджет для рабочего стола",
+  "private": true,
+  "main": "electron/main.cjs",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently -k -n vite,electron \"vite\" \"wait-on tcp:127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
+    "web": "vite",
+    "build": "tsc -b && vite build",
+    "start": "electron .",
+    "dist": "npm run build && electron-builder",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@fontsource-variable/doto": "^5.3.0",
+    "@fontsource-variable/geist": "^5.3.0",
+    "@fontsource-variable/geist-mono": "^5.3.0",
+    "@fontsource-variable/unbounded": "^5.3.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "@remotion/player": "^4.0.532",
+    "motion": "^13.5.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.532"
+  },
+  "devDependencies": {
+    "@remotion/cli": "^4.0.532",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.5",
+    "cross-env": "^10.1.0",
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "wait-on": "^9.5.1"
+  }
+}

@@ -1,0 +1,61 @@
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 40px; padding: 0 18px; border-radius: var(--r-pill);
+  border: 1px solid var(--line-2); background: var(--surface-2);
+  font-weight: 550; font-size: 14px; cursor: pointer; white-space: nowrap;
+  transition: transform var(--t-fast) var(--ease-out), background var(--t-ui) ease, border-color var(--t-ui) ease, color var(--t-ui) ease;
+}
+.btn:hover { background: var(--surface-3); }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; pointer-events: none; }
+.btn--primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn--primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
+.btn--ghost { background: transparent; border-color: transparent; color: var(--text-2); }
+.btn--ghost:hover { background: var(--surface-2); color: var(--text); }
+.btn--lg { height: 52px; padding: 0 26px; font-size: 16px; }
+.btn--sm { height: 32px; padding: 0 12px; font-size: 13px; }
+.btn--icon { width: 40px; padding: 0; }
+.btn--icon.btn--sm { width: 32px; }
+.btn--icon.btn--lg { width: 52px; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px;
+  border-radius: var(--r-pill); border: 1px solid var(--line); color: var(--text-2);
+  font-size: 12px; white-space: nowrap; background: transparent;
+}
+.chip--accent { border-color: var(--accent-line); color: var(--accent); background: var(--accent-soft); }
+button.chip { cursor: pointer; transition: transform var(--t-fast) var(--ease-out), border-color var(--t-ui), color var(--t-ui); }
+button.chip:hover { color: var(--text); border-color: var(--line-2); }
+button.chip:active { transform: scale(0.96); }
+button.chip[aria-pressed="true"] { border-color: var(--accent-line); color: var(--accent); background: var(--accent-soft); }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-panel); padding: 20px; }
+.panel--flat { background: transparent; }
+.panel--tight { padding: 14px; }
+
+.stat { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.stat__value { font-size: 28px; line-height: 1; }
+.stat__value.dot { font-size: 34px; }
+.stat__unit { font-size: 13px; color: var(--text-2); margin-left: 4px; font-family: var(--font-ui); font-weight: 400; }
+
+.seg { display: inline-flex; padding: 3px; border-radius: var(--r-pill); background: var(--surface-2); border: 1px solid var(--line); position: relative; isolation: isolate; }
+.seg__btn { position: relative; height: 30px; padding: 0 14px; border: 0; background: transparent; border-radius: var(--r-pill); cursor: pointer; color: var(--text-2); font-size: 13px; font-weight: 550; transition: color var(--t-ui); white-space: nowrap; }
+.seg__btn[aria-pressed="true"] { color: var(--accent-ink); }
+.seg__label { position: relative; z-index: 1; }
+.seg__thumb { position: absolute; inset: 0; border-radius: var(--r-pill); background: var(--accent); }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field__label { font-size: 12px; color: var(--text-2); }
+.field__box { display: flex; align-items: center; height: 42px; border-radius: var(--r-field); background: var(--surface-2); border: 1px solid var(--line); padding: 0 12px; gap: 8px; transition: border-color var(--t-ui); }
+.field__box:focus-within { border-color: var(--accent-line); }
+.field__box input { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+.field__box input::-webkit-inner-spin-button { display: none; }
+.field__unit { color: var(--text-3); font-size: 13px; }
+
+.dots { display: flex; gap: 6px; }
+.dots__d { width: 28px; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; color: var(--text-3); }
+.dots__c { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--line-2); }
+.dots__d[data-state="done"] .dots__c { background: var(--accent); border-color: var(--accent); }
+.dots__d[data-state="visit"] .dots__c { border-color: var(--accent-line); background: var(--accent-soft); }
+.dots__d[data-today="true"] { color: var(--text); }
+.dots__d[data-today="true"] .dots__c { box-shadow: 0 0 0 3px var(--bg), 0 0 0 4.5px var(--text-3); }

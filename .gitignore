@@ -1,0 +1,14 @@
+node_modules/
+dist/
+release/
+out/
+*.log
+.DS_Store
+.vite/
+.playwright-mcp/
+.claude/
+
+# служебное
+ДОСКА.md
+promo/qa*
+*.tsbuildinfo

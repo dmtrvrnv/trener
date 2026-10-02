@@ -1,0 +1,56 @@
+.ex { display: grid; grid-template-columns: 340px 1fr; height: 100%; }
+.ex__list { border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; padding: 8px 0 0; }
+.ex__title { font-size: 30px; padding: 0 24px; margin-bottom: 16px; }
+.ex__filters { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 24px 16px; border-bottom: 1px solid var(--line); }
+.ex__rows { list-style: none; margin: 0; padding: 8px 12px 24px; overflow-y: auto; flex: 1; }
+.ex__row {
+  width: 100%; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 12px; row-gap: 2px;
+  text-align: left; padding: 10px 12px; border: 0; border-radius: 10px; background: transparent; cursor: pointer;
+  transition: background var(--t-ui) ease;
+}
+.ex__row:hover { background: var(--surface); }
+.ex__row[aria-current='true'] { background: var(--surface-2); }
+.ex__row[aria-current='true'] .ex__row-name { color: var(--accent); }
+.ex__row-name { font-size: 14px; font-weight: 550; }
+.ex__row-meta { grid-row: 2; font-size: 12px; color: var(--text-3); }
+.ex__row .lvl { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
+
+.lvl { display: inline-flex; gap: 2px; align-items: flex-end; height: 12px; }
+.lvl i { width: 3px; border-radius: 2px; background: var(--line-2); }
+.lvl i:nth-child(1) { height: 5px; } .lvl i:nth-child(2) { height: 8px; } .lvl i:nth-child(3) { height: 12px; }
+.lvl i[data-on='true'] { background: var(--text-2); }
+
+.ex__detail { min-width: 0; overflow-y: auto; }
+.ex__detail-inner { padding: 8px 40px 48px; max-width: 1100px; }
+
+.exd { display: flex; flex-direction: column; gap: 24px; }
+.exd__stage {
+  border: 1px solid var(--line); border-radius: var(--r-panel); overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 70%, rgba(255, 91, 46, 0.05), transparent 70%),
+    var(--surface);
+  max-height: 52vh; display: grid; place-items: center;
+}
+.exd__stage > div { max-height: 52vh; max-width: calc(52vh * 4 / 3); }
+.exd__head { display: flex; flex-direction: column; gap: 8px; }
+.exd__name { font-size: 34px; }
+.exd__short { font-size: 16px; }
+.exd__chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.exd__cols { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; margin-top: 8px; }
+.exd__h { font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 12px; }
+.exd__steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.exd__steps li { display: grid; grid-template-columns: 24px 1fr; gap: 8px; line-height: 1.5; }
+.exd__n { color: var(--accent); font-size: 13px; padding-top: 2px; }
+.exd__mistakes { margin: 0; padding: 0 0 0 18px; display: flex; flex-direction: column; gap: 8px; color: var(--text-2); }
+.exd__mistakes li::marker { color: var(--text-3); }
+.exd__breath { margin-top: 18px; display: flex; gap: 8px; align-items: flex-start; color: var(--text-2); font-size: 14px; }
+.exd__breath svg { flex: none; margin-top: 3px; color: var(--accent); }
+.exd__vars { display: flex; flex-direction: column; gap: 6px; margin-top: 20px; }
+.exd__var {
+  display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: transparent; border-radius: var(--r-pill);
+  height: 34px; padding: 0 14px; cursor: pointer; font-size: 13px; width: fit-content; transition: border-color var(--t-ui), transform var(--t-fast) var(--ease-out);
+}
+.exd__var:hover { border-color: var(--line-2); }
+.exd__var:active { transform: scale(0.97); }
+
+.exd--compact .exd__cols { grid-template-columns: 1fr; gap: 20px; }

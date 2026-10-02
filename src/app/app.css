@@ -1,0 +1,42 @@
+.shell {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  grid-template-rows: 40px 1fr;
+  grid-template-areas: 'rail title' 'rail stage';
+}
+.titlebar { grid-area: title; -webkit-app-region: drag; }
+
+.rail {
+  grid-area: rail;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px 0 20px;
+  border-right: 1px solid var(--line);
+  -webkit-app-region: drag;
+}
+.rail__brand { display: flex; flex-direction: column; align-items: center; gap: 2px; margin: 8px 0 28px; }
+.rail__streak { font-size: 30px; line-height: 1; color: var(--accent); }
+.rail__streak-label { font-size: 10px; color: var(--text-3); letter-spacing: 0.06em; }
+.rail__items { display: flex; flex-direction: column; gap: 6px; -webkit-app-region: no-drag; }
+.rail__item {
+  position: relative; width: 72px; padding: 10px 0 8px; border: 0; background: transparent; border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; color: var(--text-3);
+  transition: color var(--t-ui) ease, transform var(--t-fast) var(--ease-out);
+}
+.rail__item:hover { color: var(--text-2); }
+.rail__item:active { transform: scale(0.96); }
+.rail__item[aria-current='page'] { color: var(--text); }
+.rail__item[aria-current='page'] .rail__icon { color: var(--accent); }
+.rail__pill { position: absolute; inset: 0; border-radius: 12px; background: var(--surface-2); z-index: -1; }
+.rail__icon { position: relative; }
+.rail__label { position: relative; font-size: 11px; font-weight: 500; }
+
+.stage { grid-area: stage; overflow: hidden; position: relative; isolation: isolate; }
+.stage__inner { height: 100%; overflow-y: auto; overflow-x: hidden; }
+.placeholder { height: 100%; display: grid; place-items: center; }
+
+.screen { padding: 8px 40px 48px; max-width: 1360px; margin: 0 auto; }
+.screen__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.screen__title { font-size: 40px; }
+
+html[data-platform='darwin'] .rail { padding-top: 44px; }

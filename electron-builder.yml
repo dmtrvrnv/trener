@@ -1,0 +1,30 @@
+appId: app.trener.desktop
+productName: Trener
+icon: electron/assets/icon.png
+directories:
+  output: release
+files:
+  - dist/**/*
+  - electron/main.cjs
+  - electron/preload.cjs
+  - electron/assets/**/*
+  - package.json
+asar: true
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+mac:
+  category: public.app-category.healthcare-fitness
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+  hardenedRuntime: true
+dmg:
+  title: Trener
+artifactName: '${productName}-${version}-${os}-${arch}.${ext}'
